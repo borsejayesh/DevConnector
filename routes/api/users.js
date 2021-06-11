@@ -22,6 +22,7 @@ router.post(
       return response.status(400).json({ errors: errors.array() });
     }
     let { name, email, password } = request.body;
+
     try {
       let user = await User.findOne({ email });
 
