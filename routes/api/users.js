@@ -3,9 +3,11 @@ const router = express.Router();
 const { body, validationResult } = require("express-validator");
 
 const User = require("../../models/User");
+const auth = require("../../middlewares/Auth");
 
 const avatar = require("gravatar");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 router.post(
   "/register",
@@ -50,6 +52,53 @@ router.post(
 
       await user.save();
       return response.status(200).send("Registration Successfull");
+    } catch (error) {
+      response.status(500).send("Server Error");
+    }
+  }
+);
+
+router.post(
+  "/login",
+  [
+    body("email").isEmail().withMessage("Enter a valid Email"),
+    body("password").exists().withMessage("Enter Valid password"),
+  ],
+  async (request, response) => {
+    let errors = validationResult(request);
+    if (!errors.isEmpty()) {
+      return response.status(400).json({ errors: errors.array() });
+    }
+    let { email, password } = request.body;
+
+    try {
+      let user = await User.findOne({ email });
+
+      if (!user) {
+        return response
+          .status(401)
+          .json({ errors: [{ msg: "Invalid Credentials" }] });
+      }
+
+      let isMatch = await bcrypt.compare(password, user.password);
+
+      if (!isMatch) {
+        return response
+          .status(401)
+          .json({ errors: [{ msg: "Invalid Credentials" }] });
+      }
+
+      const payload = {
+        user: {
+          id: user.id,
+        },
+      };
+
+      jwt.sign(payload, process.env.jwtSecret, (err, token) => {
+        if (err) throw err;
+
+        return response.json({ token });
+      });
     } catch (error) {
       response.status(500).send("Server Error");
     }
