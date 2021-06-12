@@ -173,4 +173,22 @@ router.put(
   }
 );
 
+router.delete("/experience/:id", auth, async (request, response) => {
+  try {
+    let profile = await Profile.findOne({ user: request.user.id });
+
+    let removeIndex = profile.experience
+      .map((item) => item.id)
+      .indexOf(request.param.id);
+
+    profile.experience.splice(removeIndex, 1);
+
+    await profile.save();
+    response.json(profile);
+  } catch (error) {
+    console.error(error.msg);
+    response.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;
