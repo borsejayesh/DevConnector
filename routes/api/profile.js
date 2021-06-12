@@ -121,7 +121,20 @@ router.get("/user/:id", async (request, response) => {
     response.status(200).json(profile);
   } catch (error) {
     console.error(error.msg);
-    response.status(500).json({ msg: "Profile Not Found" });
+    if (error.kind == "ObjectId") {
+      return response.status(400).json({ msg: "Profile Not Found" });
+    }
+    response.status(500).send("Server Error");
+  }
+});
+
+router.delete("/", auth, async (request, response) => {
+  try {
+    await Profile.findOneAndRemove({ user: request.user.id });
+
+    response.json({ msg: "Profile Deleted" });
+  } catch (error) {
+    response.status(500).send("Server error");
   }
 });
 

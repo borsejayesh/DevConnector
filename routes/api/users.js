@@ -105,4 +105,14 @@ router.post(
   }
 );
 
+router.delete("/", auth, async (request, response) => {
+  try {
+    await User.findOneAndRemove({ _id: request.user.id });
+
+    response.status(200).json({ msg: "User Deleted SuccessFully" });
+  } catch (error) {
+    response.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;
