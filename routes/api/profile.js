@@ -138,4 +138,38 @@ router.delete("/", auth, async (request, response) => {
   }
 });
 
+router.put(
+  "/",
+  [auth, body("title").notEmpty().withMessage("Title is Required")],
+  async (request, response) => {
+    let errors = validationResult(request);
+    if (!errors.isEmpty()) {
+      return response.status(400).json({ errors: errors.array() });
+    }
+    let { title, company, location, from, to, current, description } =
+      request.body;
+
+    let newExp = {
+      title,
+      company,
+      location,
+      from,
+      to,
+      current,
+      description,
+    };
+
+    try {
+      let profile = await Profile.findOne({ user: request.user.id });
+
+      profile.experience.unshift(newExp);
+
+      response.json(profile);
+    } catch (error) {
+      console.error(error.msg);
+      response.status(500).send("Server Error");
+    }
+  }
+);
+
 module.exports = router;
