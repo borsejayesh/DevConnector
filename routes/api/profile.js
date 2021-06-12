@@ -139,8 +139,8 @@ router.delete("/", auth, async (request, response) => {
 });
 
 router.put(
-  "/",
-  [auth, body("title").notEmpty().withMessage("Title is Required")],
+  "/experience",
+  [auth, [body("title").notEmpty().withMessage("Title is Required")]],
   async (request, response) => {
     let errors = validationResult(request);
     if (!errors.isEmpty()) {
@@ -165,7 +165,7 @@ router.put(
       profile.experience.unshift(newExp);
 
       await profile.save();
-      response.json({ msg: "experience Saved" });
+      response.json({ msg: "Experience Saved" });
     } catch (error) {
       console.error(error.msg);
       response.status(500).send("Server Error");
@@ -182,6 +182,67 @@ router.delete("/experience/:id", auth, async (request, response) => {
       .indexOf(request.param.id);
 
     profile.experience.splice(removeIndex, 1);
+
+    await profile.save();
+    response.json(profile);
+  } catch (error) {
+    console.error(error.msg);
+    response.status(500).send("Server Error");
+  }
+});
+
+router.put(
+  "/education",
+  [
+    auth,
+    [
+      body("school").notEmpty().withMessage("School is Required"),
+      body("degree").notEmpty().withMessage("Degree is Required"),
+      body("fieldofstudy").notEmpty().withMessage("Field of Study is Required"),
+      body("from").notEmpty().withMessage("From is Required"),
+    ],
+  ],
+  async (request, response) => {
+    let errors = validationResult(request);
+    if (!errors.isEmpty()) {
+      return response.status(400).json({ errors: errors.array() });
+    }
+    let { school, degree, fieldofstudy, from, to, current, description } =
+      request.body;
+
+    let newEdu = {
+      school,
+      degree,
+      fieldofstudy,
+      from,
+      to,
+      current,
+      description,
+    };
+
+    try {
+      let profile = await Profile.findOne({ user: request.user.id });
+
+      profile.education.unshift(newEdu);
+
+      await profile.save();
+      response.json({ msg: "Education Saved" });
+    } catch (error) {
+      console.error(error.msg);
+      response.status(500).send("Server Error");
+    }
+  }
+);
+
+router.delete("/education/:id", auth, async (request, response) => {
+  try {
+    let profile = await Profile.findOne({ user: request.user.id });
+
+    let removeIndex = profile.education
+      .map((item) => item.id)
+      .indexOf(request.param.id);
+
+    profile.education.splice(removeIndex, 1);
 
     await profile.save();
     response.json(profile);
