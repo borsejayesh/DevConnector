@@ -6,7 +6,7 @@ let auth = (request, response, next) => {
   if (!token) {
     return response
       .status(401)
-      .json({ message: "No Token, Authorization Denied" });
+      .json({ message: "No Token, Unathorization Denied" });
   }
 
   try {
