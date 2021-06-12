@@ -70,11 +70,24 @@ router.post(
       profile = new Profile(profileFields);
 
       response.status(200).json(profile);
+      await profile.save();
     } catch (error) {
       console.error(error.msg);
       response.status(500).send("Server Error");
     }
   }
 );
+
+router.get("/", async (request, response) => {
+  let profile = await Profile.find();
+  response.status(200).json(profile);
+  console.log(profile);
+});
+
+router.get("/me", auth, async (request, response) => {
+  let profile = await Profile.findOne({ user: request.user.id });
+  response.status(200).json(profile);
+  console.log(profile);
+});
 
 module.exports = router;
