@@ -79,15 +79,50 @@ router.post(
 );
 
 router.get("/", async (request, response) => {
-  let profile = await Profile.find();
-  response.status(200).json(profile);
-  console.log(profile);
+  try {
+    let profiles = await Profile.find().populate("user", ["name", "image"]);
+    response.status(200).json(profiles);
+  } catch (error) {
+    console.error(error.msg);
+    response.status(500).send("Server Error");
+  }
 });
 
 router.get("/me", auth, async (request, response) => {
-  let profile = await Profile.findOne({ user: request.user.id });
-  response.status(200).json(profile);
-  console.log(profile);
+  try {
+    let profile = await Profile.findOne({ user: request.user.id }).populate(
+      "user",
+      ["name", "image"]
+    );
+
+    if (!profile) {
+      return response
+        .status(400)
+        .json({ msg: "There is No Profile for this User" });
+    }
+    response.status(200).json(profile);
+  } catch (error) {
+    console.error(error.msg);
+    response.status(500).send("Server Error");
+  }
+});
+
+router.get("/user/:id", async (request, response) => {
+  try {
+    let profile = await Profile.findOne({ user: request.params.id }).populate(
+      "user",
+      ["name", "image"]
+    );
+
+    if (!profile) {
+      return response.status(400).json({ msg: "Profile Not Found" });
+    }
+
+    response.status(200).json(profile);
+  } catch (error) {
+    console.error(error.msg);
+    response.status(500).json({ msg: "Profile Not Found" });
+  }
 });
 
 module.exports = router;
