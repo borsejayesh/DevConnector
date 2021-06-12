@@ -164,7 +164,8 @@ router.put(
 
       profile.experience.unshift(newExp);
 
-      response.json(profile);
+      await profile.save();
+      response.json({ msg: "experience Saved" });
     } catch (error) {
       console.error(error.msg);
       response.status(500).send("Server Error");
