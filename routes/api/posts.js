@@ -35,4 +35,100 @@ router.post(
   }
 );
 
+router.get("/", auth, async (request, response) => {
+  try {
+    let posts = await Post.find().sort({ date: -1 });
+    response.json(posts);
+  } catch (error) {
+    console.error(error.msg);
+    response.status(500).send("Server Error");
+  }
+});
+
+router.get("/:id", auth, async (request, response) => {
+  try {
+    let post = await Post.findById(request.params.id);
+
+    if (!post) {
+      return response.status(404).json({ msg: "Post Not Found" });
+    }
+
+    response.json(post);
+  } catch (error) {
+    console.error(error.msg);
+    if (error.kind === "ObjectId") {
+      return response.status(404).json({ msg: "Post Not Found" });
+    }
+    response.status(500).send("Server Error");
+  }
+});
+
+router.delete("/:id", auth, async (request, response) => {
+  try {
+    let post = await Post.findById(request.params.id);
+
+    if (!post) {
+      return response.status(404).json({ msg: "Post Not Found" });
+    }
+
+    if (post.user.toString() !== request.user.id) {
+      return response.status(401).json({ msg: "User Not Authorized" });
+    }
+
+    await post.remove();
+    response.json({ msg: "deleted" });
+  } catch (error) {
+    console.error(error.msg);
+    if (error.kind === "ObjectId") {
+      return response.status(404).json({ msg: "Post Not Found" });
+    }
+    response.status(500).send("Server Error");
+  }
+});
+
+router.put("/like/:id", auth, async (request, response) => {
+  try {
+    let post = await Post.findById(request.params.id);
+    if (
+      post.likes.filter((like) => like.user.toString() === request.user.id)
+        .length > 0
+    ) {
+      return response.status(400).json({ msg: "Post Already Liked" });
+    }
+
+    post.likes.unshift({ user: request.user.id });
+    await post.save();
+
+    response.json(post.likes);
+  } catch (error) {
+    console.error(error.msg);
+    response.status(500).send("Server Error");
+  }
+});
+
+router.put("/unlike/:id", auth, async (request, response) => {
+  try {
+    let post = await Post.findById(request.params.id);
+    if (
+      post.likes.filter((like) => like.user.toString() === request.user.id)
+        .length === 0
+    ) {
+      return response.status(400).json({ msg: "Post has not been liked yet" });
+    }
+
+    let removeIndex = post.likes
+      .map((like) => like.user.toString())
+      .indexOf(request.user.id);
+
+    post.likes.splice(removeIndex, 1);
+
+    await post.save();
+
+    response.json(post.likes);
+  } catch (error) {
+    console.error(error.msg);
+    response.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;
