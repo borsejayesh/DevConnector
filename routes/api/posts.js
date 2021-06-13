@@ -131,4 +131,63 @@ router.put("/unlike/:id", auth, async (request, response) => {
   }
 });
 
+router.post(
+  "/comment/:id",
+  [auth, [body("text").notEmpty().withMessage("Text is required")]],
+  async (request, response) => {
+    let errors = validationResult(request);
+    if (!errors.isEmpty()) {
+      return response.status(400).json({ errors: errors.array() });
+    }
+    try {
+      let user = await User.findById(request.user.id).select("-password");
+      let post = await Post.findById(request.params.id);
+
+      let newComment = {
+        text: request.body.text,
+        name: user.name,
+        image: user.image,
+        user: request.user.id,
+      };
+
+      post.comments.unshift(newComment);
+      await post.save();
+      response.json(post.comments);
+    } catch (error) {
+      console.error(error.msg);
+      response.status(500).send("Server Error");
+    }
+  }
+);
+
+router.delete("/comment/:id/:comment_id", auth, async (request, response) => {
+  try {
+    let post = await Post.findById(request.params.id);
+
+    let comment = post.comments.find(
+      (comment) => comment.id === request.params.comment_id
+    );
+
+    if (!comment) {
+      return response.status(404).json({ msg: "Comment Does Not Exists" });
+    }
+
+    if (comment.user.toString() !== request.user.id) {
+      return response.status(401).json({ msg: "User Not Authorized" });
+    }
+
+    let removeIndex = post.comments
+      .map((comment) => comment.user.toString())
+      .indexOf(request.user.id);
+
+    post.comments.splice(removeIndex, 1);
+    await post.save();
+
+    response.json(post.comments);
+  } catch (error) {
+    console.error(error.msg);
+    response.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;
