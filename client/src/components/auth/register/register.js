@@ -1,26 +1,67 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
 
 const Register = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    cpassword: "",
+  });
+
+  let { name, email, password, cpassword } = formData;
+
+  let handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  let handleSubmit = (e) => {
+    e.preventDefault();
+    if (password !== cpassword) {
+      console.log("password not match");
+    } else {
+      console.log(formData);
+    }
+  };
+
   return (
     <Fragment>
       <h1 className="large text-primary">Sign Up</h1>
       <p className="lead">
         <i className="fa fa-user"></i> Create Your Account
       </p>
-      <form className="form">
+      <form className="form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <input type="text" name="name" placeholder="Name" required />
+          <input
+            value={name}
+            onChange={handleChange}
+            type="text"
+            name="name"
+            placeholder="Name"
+            required
+          />
           <small className="form-text">
             This site uses Gravatar so if you want a profile image, use a
             Gravatar email
           </small>
         </div>
         <div className="form-group">
-          <input type="email" name="email" placeholder="Email" required />
+          <input
+            value={email}
+            onChange={handleChange}
+            type="email"
+            name="email"
+            placeholder="Email"
+            required
+          />
         </div>
         <div className="form-group">
           <input
+            value={password}
+            onChange={handleChange}
             type="password"
             name="password"
             placeholder="Password"
@@ -30,8 +71,10 @@ const Register = () => {
         </div>
         <div className="form-group">
           <input
+            value={cpassword}
+            onChange={handleChange}
             type="password"
-            name="Cpassword"
+            name="cpassword"
             placeholder="ConfirmPassword"
             required
             minLength="6"
