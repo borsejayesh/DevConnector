@@ -1,3 +1,9 @@
 import { combineReducers } from "redux";
 
-export default combineReducers({});
+import { alertReducer, ALERT_KEY } from "./alertReducer/alert.reducer";
+
+let rootReducer = combineReducers({
+  [ALERT_KEY]: alertReducer,
+});
+
+export default rootReducer;
